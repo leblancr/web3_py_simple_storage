@@ -36,15 +36,15 @@ abi = compiled_sol['contracts']['SimpleStorage.sol']['SimpleStorage']['abi']
 # connect to ganache
 w3 = Web3(Web3.HTTPProvider('HTTP://127.0.0.1:7545'))
 chain_id = w3.eth.chain_id  # 5777
-my_address = '0xE6F04d6C5f2CfA3480a53435F81Ae94383CEb18f'
-private_key = '6672d9370a2d6ef643d7ccc58c924fb1752aad11878fbe58dd558315ab5105b3'
+my_address = '0x2313E71C42Ae754DE0A63996c5CCb4B0d672fc82'
+private_key = 'f2dee25c974e10a9b72e8895644b6e7bc34bba1ccc6654aac6268f9841d43a4f'
 
 # create the contract
 SimpleStorage = w3.eth.contract(abi=abi, bytecode=bytecode)
 
 # get latest transaction
 nonce = w3.eth.get_transaction_count(my_address)
-print(nonce)
+print('nonce:', nonce)
 
 # 1. build a transaction
 # 2. sign a transaction
@@ -57,4 +57,17 @@ transaction = SimpleStorage.constructor().build_transaction(
      }
 )
 
-# print(transaction)
+print(transaction)
+
+signed_txn = w3.eth.account.sign_transaction(transaction, private_key=private_key)
+print('signed_txn:', signed_txn)
+tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+print('tx_hash:', tx_hash)
+tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+print('tx_receipt:', tx_receipt)
+
+# working with the contract you need contract address and abi
+simple_storage = w3.eth.contract(address=tx_receipt.contractAddress, abi=abi)
+# call -> simulate making the call and getting a return value
+# transact -> actually make a state change
+print(simple_storage.functions.retrieve().call())  # get favoriteNumber
